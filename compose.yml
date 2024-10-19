@@ -1,0 +1,62 @@
+services:
+
+  backend:
+    build:
+      context: ./src/backend
+      dockerfile: ../../.docker/backend/Dockerfile
+    ports:
+      - ${PORT_BACKEND}:8080
+    volumes:
+      - ./src/backend:/app
+      - ./src/openapi/index.yaml:/openapi/index.yaml # open_apiの定義を同期
+    command: air -c .air.toml
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:5.0
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - ${PORT_MONGO}:8081
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGO_ROOT_USERNAME}
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=example_password
+      - ME_CONFIG_MONGODB_URL=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongo:27017/
+      - ME_CONFIG_BASICAUTH_USERNAME=${MONGO_BASICAUTH_USERNAME}
+      - ME_CONFIG_BASICAUTH_PASSWORD=${MONGO_BASICAUTH_PASSWORD}
+    depends_on:
+      - mongo
+      - merger
+
+  redoc:
+    image: redocly/redoc:v2.0.0
+    environment:
+      SPEC_URL: index.yaml
+      PORT: 8081
+      REDOC_OPTIONS: path-in-middle-panel="true"
+    ports:
+      - ${PORT_REDOC}:8081
+    volumes:
+      - ./src/openapi/index.yaml:/usr/share/nginx/html/index.yaml
+    depends_on:
+      - merger
+
+  merger:
+    build: ./.docker/openapi/merger
+    tty: true
+    init: true
+    command: >
+      watch 'swagger-merger -i /openapi/docs/*.yaml -o /openapi/index.yaml; redocly build-docs /openapi/index.yaml -o /openapi/index.html' /openapi/docs
+    volumes:
+      - ./src/openapi:/openapi
+
+volumes:
+  mongo_data:
