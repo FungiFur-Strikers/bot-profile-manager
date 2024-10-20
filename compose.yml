@@ -12,7 +12,12 @@ services:
     command: air -c .air.toml
     depends_on:
       - mongo
-
+    environment:
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongo:27017/botgo.mod?authSource=admin
+      - MONGODB_NAME=discord_bot
+      - SERVER_ADDRESS=:8080
+      - TZ=Asia/Tokyo
+  
   mongo:
     image: mongo:5.0
     volumes:
