@@ -30,6 +30,21 @@ func (r *profileRepository) GetProfile(ctx context.Context, botID string) (*mode
 	return &profile, nil
 }
 
+func (r *profileRepository) GetAllProfiles(ctx context.Context) ([]*models.Profile, error) {
+	cursor, err := r.collection.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var profiles []*models.Profile
+	if err := cursor.All(ctx, &profiles); err != nil {
+		return nil, err
+	}
+
+	return profiles, nil
+}
+
 func (r *profileRepository) UpsertProfile(ctx context.Context, profile *models.Profile) error {
 	opts := options.Update().SetUpsert(true)
 	filter := bson.M{"botId": profile.BotID}

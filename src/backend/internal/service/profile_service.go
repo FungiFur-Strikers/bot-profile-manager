@@ -16,7 +16,10 @@ func NewProfileService(repo repository.ProfileRepository) *ProfileService {
 	return &ProfileService{repo: repo}
 }
 
-func (s *ProfileService) GetProfile(ctx context.Context, botID string) (*models.Profile, error) {
+func (s *ProfileService) GetProfile(ctx context.Context, botID string) (interface{}, error) { // interfaceに変更
+	if botID == "*" {
+		return s.repo.GetAllProfiles(ctx)
+	}
 	return s.repo.GetProfile(ctx, botID)
 }
 
