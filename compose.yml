@@ -13,7 +13,7 @@ services:
       - mongo
     environment:
       - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongo:27017/botgo.mod?authSource=admin
-      - MONGODB_NAME=discord_bot
+      - MONGODB_NAME=bot-profile-manager
       - SERVER_ADDRESS=:8080
       - TZ=Asia/Tokyo
 
