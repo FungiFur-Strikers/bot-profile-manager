@@ -1,5 +1,4 @@
 services:
-
   backend:
     build:
       context: ./src/backend
@@ -12,6 +11,11 @@ services:
     command: air -c .air.toml
     depends_on:
       - mongo
+    environment:
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongo:27017/botgo.mod?authSource=admin
+      - MONGODB_NAME=bot-profile-manager
+      - SERVER_ADDRESS=:8080
+      - TZ=Asia/Tokyo
 
   mongo:
     image: mongo:5.0
@@ -57,6 +61,22 @@ services:
       watch 'swagger-merger -i /openapi/docs/*.yaml -o /openapi/index.yaml; redocly build-docs /openapi/index.yaml -o /openapi/index.html' /openapi/docs
     volumes:
       - ./src/openapi:/openapi
+
+  ui:
+    build:
+      context: ./src/ui
+      dockerfile: ../../.docker/ui/Dockerfile
+    ports:
+      - ${PORT_FRONTEND}:3000
+    volumes:
+      - ./src/ui:/app
+      - /app/node_modules
+    environment:
+      - API_URL=${API_URL}
+      - ADMIN_USER_EMAIL=${ADMIN_USER_EMAIL}
+      - ADMIN_USER_PASSWORD=${ADMIN_USER_PASSWORD}
+    depends_on:
+      - backend
 
 volumes:
   mongo_data:
